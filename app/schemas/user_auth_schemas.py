@@ -10,3 +10,8 @@ class UserSignUpSchema(BaseModel):
 class UserLoginSchema(BaseModel):
     email: EmailStr
     password: str
+
+
+class VerificationCodeSchema(BaseModel):
+    email: str
+    code: str

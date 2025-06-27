@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 
 from db_connection import DbConnection
-from schemas.user_auth_schemas import UserSignUpSchema, UserLoginSchema
-from schemas.verification_schema import VerificationCodeSchema
+from schemas.user_auth_schemas import UserSignUpSchema, UserLoginSchema, VerificationCodeSchema
 from core.security import pwd_context
 from services.email_service import send_verification_email, generate_verification_code
 from core.security import create_access_token
@@ -18,7 +17,11 @@ class UserAuth:
         name = data.name
         email = data.email
         password = data.password
-        hashed_password = pwd_context.hash(password)
+
+        try:
+            hashed_password = pwd_context.hash(password)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Error hashing password")
 
         try:
             self.db.cursor.execute("""INSERT INTO users 
@@ -29,30 +32,22 @@ class UserAuth:
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        try:
-            hashed_password = pwd_context.hash(password)
-        except Exception:
-            raise HTTPException(status_code=500, detail="Error hashing password")
-
-        # 1. Insert user (without RETURNING)
-        try:
-            self.db.cursor.execute("""
-                INSERT INTO users (name, email, password)
-                VALUES (%s, %s, %s)
-            """, (name, email, hashed_password))
-            self.db.conn.commit()
-        except Exception:
-            raise HTTPException(status_code=500, detail="Error inserting user")
-
         # 2. Retrieve the ID manually (based on email)
         try:
             self.db.cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
-            user_row = self.db.cursor.fetchone()
-            if not user_row:
-                raise HTTPException(status_code=500, detail="User ID lookup failed")
-            user_id = user_row[0]
         except Exception:
-            raise HTTPException(status_code=500, detail="Database fetch error")
+            raise HTTPException(status_code=500, detail="Database select error")
+
+        try:
+            user_row = self.db.cursor.fetchone()
+            print(user_row)
+        except Exception:
+            raise HTTPException(
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Fetch error")
+        if not user_row:
+            raise HTTPException(status_code=404, detail="User ID lookup failed")
+        user_id = dict(user_row).get("id")
 
         code = generate_verification_code()
 
@@ -61,7 +56,8 @@ class UserAuth:
                                    (code, user_id))
             self.db.conn.commit()
         except Exception:
-            raise HTTPException(status_code=500, detail="Error inserting verification code")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error inserting verification code")
 
         try:
             email_sent = send_verification_email(email, code)
@@ -81,12 +77,10 @@ class UserAuth:
         except Exception:
             raise HTTPException(status_code=500, detail="Database fetch error")
 
-        try:
-            if not user:
-                raise HTTPException(status_code=400, detail="User not found.")
-            user_id = user[0]
-        except Exception:
-            raise HTTPException(status_code=500, detail="Error fetching user")
+        if not user:
+            raise HTTPException(status_code=400, detail="User not found.")
+
+        user_id = dict(user).get("id")
 
         try:
             self.db.cursor.execute("""SELECT * FROM verificationcode 

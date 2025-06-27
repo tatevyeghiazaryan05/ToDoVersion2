@@ -1,7 +1,6 @@
 from fastapi import APIRouter, status
 from services.user_auth import UserAuth
-from schemas.user_auth_schemas import UserSignUpSchema, UserLoginSchema
-from schemas.verification_schema import VerificationCodeSchema
+from schemas.user_auth_schemas import UserSignUpSchema, UserLoginSchema, VerificationCodeSchema
 
 user_auth_router = APIRouter()
 

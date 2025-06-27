@@ -6,7 +6,7 @@ from jose import jwt
 from fastapi.security.oauth2 import OAuth2PasswordBearer
 from fastapi import Depends
 
-oauth2_schema = OAuth2PasswordBearer(tokenUrl="/api/user/auth/login")
+oauth2_schema = OAuth2PasswordBearer(tokenUrl="/api/endpoints/user_auth/login")
 
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
