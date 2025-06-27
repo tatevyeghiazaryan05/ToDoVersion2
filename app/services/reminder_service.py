@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from database import SessionLocal
-from models import Todo, Users
-from services.email_service import send_verification_email
+from app.database import SessionLocal
+from app.models import Todo, Users
+from app.services.email_service import send_verification_email
 
 
 def check_reminders():
