@@ -5,3 +5,8 @@ class UserSignUpSchema(BaseModel):
     name: str
     email: EmailStr
     password: str
+
+
+class UserLoginSchema(BaseModel):
+    email: EmailStr
+    password: str
