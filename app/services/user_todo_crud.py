@@ -1,17 +1,22 @@
+from datetime import datetime
+
 from fastapi import HTTPException, status
 from fastapi import Depends
 
 from core.security import get_current_user
 
 from db_connection import DbConnection
-from schemas.user_todo_schemas import ToDoCreateSchema
+from schemas.todo_crud_schemas import ToDoCreateSchema, TodoUpdateSchema
 
 
 class ToDoCRUD:
     def __init__(self):
         self.db = DbConnection()
 
-    def todo_create(self, data: ToDoCreateSchema, user_id: int):
+    def todo_create(self,
+                    data: ToDoCreateSchema,
+                    user_id: int):
+
         title = data.title
         category = data.category
         description = data.description
@@ -26,3 +31,54 @@ class ToDoCRUD:
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=500, detail="Server error during todo addition")
+
+    def update_todo(self,
+                    updates: TodoUpdateSchema):
+        try:
+            self.db.cursor.execute("""SELECT * FROM todo WHERE id=%s""", (updates.todo_id,))
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database query error")
+
+        try:
+            todo = self.db.cursor.fetchone()
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database fetch error")
+
+        if todo is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Todo not found!"
+            )
+
+        try:
+            todo = dict(todo)
+            update_data = updates.model_dump()
+
+            for key, value in update_data.items():
+                if value is None:
+                    setattr(updates, key, todo[key])
+
+            updated_at = datetime.now()
+
+            self.db.cursor.execute("""UPDATE todo SET 
+                                    title=%s, description=%s, category=%s, 
+                                    status=%s, due_date=%s, updated_at=%s
+                                    WHERE id=%s""",
+                                   (updates.title, updates.description,
+                                    updates.category, updates.status,
+                                    updates.due_date, updated_at, updates.todo_id))
+            self.db.conn.commit()
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating todo")
+
+    def delete_todo(self,
+                    todo_id: int):
+
+        try:
+            self.db.cursor.execute("DELETE FROM todo WHERE id=%s",
+                                   (todo_id,))
+            self.db.conn.commit()
+        except Exception:
+            raise HTTPException(status_code=500, detail="Server error during todo deletion")

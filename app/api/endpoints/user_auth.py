@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from services.user_auth import UserAuth
 from schemas.user_auth_schemas import UserSignUpSchema, UserLoginSchema, VerificationCodeSchema
 
-user_auth_router = APIRouter()
+user_auth_router = APIRouter(tags=["Todo auth"])
 
 user_auth_service = UserAuth()
 
