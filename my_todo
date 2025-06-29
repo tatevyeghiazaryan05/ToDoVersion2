@@ -1,7 +1,4 @@
-# todo signup
+# todo in signup api in code tables keep email instead of user_id
 # todo filters
 # todo archive
-# todo reminder_service
-# todo main
-# todo delete users table , and do alembic upgrade head +
-
+# todo when running project reminder_service automatecly be runed
