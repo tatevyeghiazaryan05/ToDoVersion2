@@ -33,9 +33,10 @@ class ToDoCRUD:
             raise HTTPException(status_code=500, detail="Server error during todo addition")
 
     def update_todo(self,
-                    updates: TodoUpdateSchema):
+                    updates: TodoUpdateSchema,
+                    todo_id: int):
         try:
-            self.db.cursor.execute("""SELECT * FROM todo WHERE id=%s""", (updates.todo_id,))
+            self.db.cursor.execute("""SELECT * FROM todo WHERE id=%s""", (todo_id,))
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Database query error")
@@ -68,7 +69,7 @@ class ToDoCRUD:
                                     WHERE id=%s""",
                                    (updates.title, updates.description,
                                     updates.category, updates.status,
-                                    updates.due_date, updated_at, updates.todo_id))
+                                    updates.due_date, updated_at, todo_id))
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating todo")
@@ -82,3 +83,21 @@ class ToDoCRUD:
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=500, detail="Server error during todo deletion")
+
+    def get_all_todos(self,
+                      user_id: int):
+        try:
+            self.db.cursor.execute("SELECT * FROM todo where user_id=%s",
+                                   (user_id,))
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database query error")
+
+        try:
+            todos = self.db.cursor.fetchall()
+
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database fetch error")
+
+        return todos

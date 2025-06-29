@@ -26,17 +26,26 @@ def create_todo(data: ToDoCreateSchema,
     return todo_crud_service.todo_create(data, user_id)
 
 
-@todo_crud_router.get("/api/todo/get/all/todo")
-def get_todo():
-    pass
-
-
-@todo_crud_router.put("/api/todo/change")
-def change_todo(data: TodoUpdateSchema,
+@todo_crud_router.put("/api/todo/change/{todo_id}")
+def change_todo(todo_id: int,
+                data: TodoUpdateSchema,
                 token=Depends(get_current_user)):
-    return todo_crud_service.update_todo(data)
+    return todo_crud_service.update_todo(data, todo_id)
 
 
 @todo_crud_router.delete("/api/todo/delete/todo/{todo_id}")
 def delete_todo(todo_id: int):
     return todo_crud_service.delete_todo(todo_id)
+
+
+@todo_crud_router.get("/api/todo/get/all/todo")
+def get_todo(token=Depends(get_current_user)):
+    try:
+        user_id = token.get("id")
+        print(user_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token fetch error"
+            )
+    return todo_crud_service.get_all_todos(user_id)

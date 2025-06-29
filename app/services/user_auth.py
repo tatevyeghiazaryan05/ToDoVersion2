@@ -29,10 +29,10 @@ class UserAuth:
                                 VALUES (%s,%s,%s)""",
                                    (name, email, hashed_password))
             self.db.conn.commit()
-        except Exception:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Database Query error :{e} ")
 
-        # 2. Retrieve the ID manually (based on email)
         try:
             self.db.cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         except Exception:

@@ -12,7 +12,6 @@ class ToDoCreateSchema(BaseModel):
 
 
 class TodoUpdateSchema(BaseModel):
-    todo_id: int
     title: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
