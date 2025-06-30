@@ -1,3 +1,5 @@
 .idea
 .venv
 alembic/__pycache__/*
+*.pyc
+__pycache__/
