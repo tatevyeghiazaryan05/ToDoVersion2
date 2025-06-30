@@ -18,3 +18,14 @@ def get_unfinished_todo(token=Depends(get_current_user)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Token error")
     return todo_filters_service.get_unfinished_todo(user_id)
+
+
+@todo_filters_router.get("/by/title/{title}")
+def get_todo_by_title(title: str,
+                      token=Depends(get_current_user)):
+    try:
+        user_id = token.get("id")
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Token error")
+    return todo_filters_service.get_todo_by_title(user_id, title)
