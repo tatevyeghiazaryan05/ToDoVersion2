@@ -21,7 +21,8 @@ class UserAuth:
         try:
             hashed_password = pwd_context.hash(password)
         except Exception:
-            raise HTTPException(status_code=500, detail="Error hashing password")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error hashing password")
 
         try:
             self.db.cursor.execute("""INSERT INTO users 
@@ -33,27 +34,11 @@ class UserAuth:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Database Query error :{e} ")
 
-        try:
-            self.db.cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
-        except Exception:
-            raise HTTPException(status_code=500, detail="Database select error")
-
-        try:
-            user_row = self.db.cursor.fetchone()
-            print(user_row)
-        except Exception:
-            raise HTTPException(
-                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail="Fetch error")
-        if not user_row:
-            raise HTTPException(status_code=404, detail="User ID lookup failed")
-        user_id = dict(user_row).get("id")
-
         code = generate_verification_code()
 
         try:
-            self.db.cursor.execute("""INSERT INTO verificationcode (code, user_id) VALUES (%s, %s)""",
-                                   (code, user_id))
+            self.db.cursor.execute("""INSERT INTO verificationcode (code, email) VALUES (%s, %s)""",
+                                   (code, email))
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
