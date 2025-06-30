@@ -40,9 +40,9 @@ class UserAuth:
             self.db.cursor.execute("""INSERT INTO verificationcode (code, email) VALUES (%s, %s)""",
                                    (code, email))
             self.db.conn.commit()
-        except Exception:
+        except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail="Error inserting verification code")
+                                detail=f"Error inserting verification code:{e}")
 
         try:
             email_sent = send_verification_email(email, code)
