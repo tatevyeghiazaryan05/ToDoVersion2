@@ -68,7 +68,7 @@ class ToDoFilters:
     def get_todo_by_due_date(self, start_date: date, end_date: date, user_id: int):
         try:
             self.db.cursor.execute("SELECT * FROM todo where "
-                                   "user_id = %s AND deadline>=%s AND deadline<=%s",
+                                   "user_id = %s AND due_date>=%s AND due_date<=%s",
                                    (user_id, start_date, end_date))
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

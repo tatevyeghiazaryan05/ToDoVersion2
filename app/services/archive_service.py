@@ -1,35 +1,33 @@
-from fastapi import APIRouter, HTTPException, status
+from datetime import date
 
-import main
+from fastapi import HTTPException, status
+
 from db_connection import DbConnection
-
-todo_archive_router = APIRouter(tags=["Todo archive"])
 
 
 class ToDoArchive:
     def __init__(self):
         self.db = DbConnection()
 
-    def archive_todo(self, todo_id: int):
+    def archive_todo(self, todo_id: int, user_id: int):
         try:
-            main.cursor.execute("""
+            self.db.cursor.execute("""
                 INSERT INTO archivetodo 
-                (todo_id, user_id, title, description, category, due_date, status, updated_at, created_at)
-                SELECT id, user_id, title, description, category, due_date, status, updated_at, created_at
-                FROM todo WHERE id = %s
-            """, (todo_id,))
-        except Exception:
+                (user_id, title, description, category, due_date, status, updated_at, created_at)
+                SELECT user_id, title, description, category, due_date, status, updated_at, created_at
+                FROM todo WHERE id = %s AND user_id = %s""", (todo_id, user_id))
+        except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail="Error inserting todo into archive table")
+                                detail=f"Error inserting todo into archive table {e}")
 
         try:
-            main.cursor.execute("DELETE FROM todo WHERE id = %s", (todo_id,))
-        except Exception:
+            self.db.cursor.execute("DELETE FROM todo WHERE id = %s AND user_id = %s", (todo_id, user_id))
+        except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail="Error deleting todo")
+                                detail=f"Error deleting todo {e}")
 
         try:
-            main.conn.commit()
+            self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error committing changes")

@@ -19,11 +19,29 @@ class UserAuth:
         password = data.password
 
         try:
+            self.db.cursor.execute("""SELECT * FROM users where email=%s""",
+                                   (email,))
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Can't select data")
+
+        try:
+            existing_user = self.db.cursor.fetchone()
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Can't fetch user")
+
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is already registered. Please log in or use a different email."
+            )
+
+        try:
             hashed_password = pwd_context.hash(password)
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error hashing password")
-
 
         try:
             self.db.cursor.execute("""INSERT INTO users 

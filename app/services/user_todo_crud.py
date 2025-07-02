@@ -24,9 +24,9 @@ class ToDoCRUD:
 
         try:
             self.db.cursor.execute(
-                """INSERT INTO todo (user_id, category, title, description, due_date)
-                 VALUES (%s, %s, %s, %s, %s)""",
-                (user_id, category, title, description, due_date)
+                """INSERT INTO todo (user_id, category, title, description, due_date, status, archived)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (user_id, category, title, description, due_date, False, False)
             )
             self.db.conn.commit()
         except Exception:
