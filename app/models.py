@@ -46,6 +46,6 @@ class ArchiveTodo(Base):
 class VerificationCode(Base):
     __tablename__ = "verificationcode"
     id = Column(Integer, nullable=False, primary_key=True)
-    email = Column(String, nullable=False, unique=True)
+    email = Column(String, nullable=False)
     code = Column(String, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
