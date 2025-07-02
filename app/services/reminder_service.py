@@ -3,9 +3,16 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
-from app.models import Todo, Users
-from app.services.email_service import send_verification_email
+from database import SessionLocal
+from models import Todo, Users
+from services.email_service import send_verification_email
+
+import threading
+
+
+def start_reminder_loop():
+    thread = threading.Thread(target=check_reminders, daemon=True)
+    thread.start()
 
 
 def check_reminders():
@@ -43,5 +50,3 @@ def check_reminders():
 
         print("⏳ Waiting 5 minutes for next check...")
         time.sleep(7200)
-
-check_reminders()
