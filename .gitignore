@@ -4,3 +4,10 @@ alembic/__pycache__/*
 *.pyc
 __pycache__/
 venv/
+
+alembic/__pycache__/env.cpython-312.pyc
+alembic/versions/__pycache__/0780c3b6a4ae_verification_table_change_user_is_into_.cpython-312.pyc
+alembic/versions/__pycache__/8cc8d6726218_create_todo_tables.cpython-312.pyc
+alembic/versions/__pycache__/9b61ac3ea1d5_email_unique_true.cpython-312.pyc
+app/__pycache__/database.cpython-312.pyc
+app/__pycache__/models.cpython-312.pyc
