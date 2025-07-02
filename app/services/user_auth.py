@@ -48,9 +48,11 @@ class UserAuth:
         try:
             email_sent = send_verification_email(email, code)
             if not email_sent:
-                raise HTTPException(status_code=500, detail="Failed to send verification email.")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                    detail="Failed to send verification email.")
         except Exception:
-            raise HTTPException(status_code=500, detail="Error sending verification email")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error sending verification email")
 
     def verify(self, verification_data: VerificationCodeSchema):
         try:
@@ -58,18 +60,22 @@ class UserAuth:
                                 WHERE email = %s AND code = %s""",
                                    (verification_data.email, verification_data.code))
         except Exception:
-            raise HTTPException(status_code=500, detail="Database query error")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database query error")
 
         try:
             data = self.db.cursor.fetchone()
         except Exception:
-            raise HTTPException(status_code=500, detail="Database fetch error")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database fetch error")
 
         try:
             if not data:
-                raise HTTPException(status_code=400, detail="Invalid verification code.")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Invalid verification code.")
         except Exception:
-            raise HTTPException(status_code=500, detail="Error fetching verification code")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error fetching verification code")
 
         created_at = data['created_at']
         expiration_time = created_at + timedelta(minutes=15)
@@ -78,7 +84,8 @@ class UserAuth:
                 self.db.cursor.execute("DELETE FROM verificationcode WHERE id = %s", (data.get("id"),))
                 self.db.conn.commit()
             except Exception:
-                raise HTTPException(status_code=500, detail="Error deleting expired code")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                    detail="Error deleting expired code")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Verification code has expired after 15 minutes."
@@ -89,13 +96,15 @@ class UserAuth:
                                    ("true", verification_data.email))
             self.db.conn.commit()
         except Exception:
-            raise HTTPException(status_code=500, detail="Error updating user as verified")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error updating user as verified")
 
         try:
             self.db.cursor.execute("DELETE FROM verificationcode WHERE code= %s", (verification_data.code,))
             self.db.conn.commit()
         except Exception:
-            raise HTTPException(status_code=500, detail="Error deleting verification code")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error deleting verification code")
 
     def login(self, login_data: UserLoginSchema):
         email = login_data.email
@@ -104,12 +113,14 @@ class UserAuth:
         try:
             self.db.cursor.execute("""SELECT * FROM users WHERE email = %s""", (email,))
         except Exception:
-            raise HTTPException(status_code=500, detail="Database query error")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database query error")
 
         try:
             user = self.db.cursor.fetchone()
         except Exception:
-            raise HTTPException(status_code=500, detail="Database fetch error")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database fetch error")
 
         if user is None:
             raise HTTPException(
@@ -120,8 +131,16 @@ class UserAuth:
         try:
             user = dict(user)
             user_password_db = user.get("password")
+            user_verified = user.get("verified")
         except Exception:
-            raise HTTPException(status_code=500, detail="Error processing user data")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Error processing user data")
+
+        if not user_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is not verified. Please verify your email first."
+            )
 
         if not pwd_context.verify(password, user_password_db):
             raise HTTPException(
@@ -135,6 +154,7 @@ class UserAuth:
 
             token = create_access_token({"id": user_id_db, "email": user_email_db})
         except Exception:
-            raise HTTPException(status_code=500, detail="Token creation error")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Token creation error")
 
         return {"access_token": token}
