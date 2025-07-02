@@ -24,6 +24,7 @@ class UserAuth:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error hashing password")
 
+
         try:
             self.db.cursor.execute("""INSERT INTO users 
                                 (name,email,password) 
@@ -53,24 +54,9 @@ class UserAuth:
 
     def verify(self, verification_data: VerificationCodeSchema):
         try:
-            self.db.cursor.execute("SELECT id FROM users WHERE email = %s", (verification_data.email,))
-        except Exception:
-            raise HTTPException(status_code=500, detail="Database query error")
-
-        try:
-            user = self.db.cursor.fetchone()
-        except Exception:
-            raise HTTPException(status_code=500, detail="Database fetch error")
-
-        if not user:
-            raise HTTPException(status_code=400, detail="User not found.")
-
-        user_id = dict(user).get("id")
-
-        try:
             self.db.cursor.execute("""SELECT * FROM verificationcode 
-                                WHERE user_id = %s AND code = %s""",
-                                   (user_id, verification_data.code))
+                                WHERE email = %s AND code = %s""",
+                                   (verification_data.email, verification_data.code))
         except Exception:
             raise HTTPException(status_code=500, detail="Database query error")
 
@@ -99,14 +85,14 @@ class UserAuth:
             )
 
         try:
-            self.db.cursor.execute("""UPDATE users SET verified=%s WHERE id=%s""",
-                                   ("true", user_id))
+            self.db.cursor.execute("""UPDATE users SET verified=%s WHERE email=%s""",
+                                   ("true", verification_data.email))
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=500, detail="Error updating user as verified")
 
         try:
-            self.db.cursor.execute("DELETE FROM verificationcode WHERE id = %s", (data.get("id"),))
+            self.db.cursor.execute("DELETE FROM verificationcode WHERE code= %s", (verification_data.code,))
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=500, detail="Error deleting verification code")
