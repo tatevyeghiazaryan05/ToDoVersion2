@@ -19,7 +19,7 @@ class UserAuth:
         password = data.password
 
         try:
-            self.db.cursor.execute("""SELECT * FROM users where email=%s""",
+            self.db.cursor.execute("""SELECT id FROM users where email=%s""",
                                    (email,))
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -33,7 +33,7 @@ class UserAuth:
 
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Email is already registered. Please log in or use a different email."
             )
 

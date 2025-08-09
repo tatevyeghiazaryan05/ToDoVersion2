@@ -49,3 +49,8 @@ def get_todo(token=Depends(get_current_user)):
             detail="Token fetch error"
             )
     return todo_crud_service.get_all_todos(user_id)
+
+
+@todo_crud_router.get("/api/todo/get/todo/{todo_id}")
+def get_todo(todo_id: int, token=Depends(get_current_user)):
+    return todo_crud_service.get_todo(todo_id)

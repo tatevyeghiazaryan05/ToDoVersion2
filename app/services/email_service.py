@@ -1,3 +1,4 @@
+import datetime
 import time
 import smtplib
 from email.message import EmailMessage
@@ -14,7 +15,7 @@ EMAIL_PASSWORD = "klcm ecsh nfcb xhzs"
 def generate_verification_code(length=8):
     characters = string.ascii_letters + string.digits
     random_part = ''.join(secrets.choice(characters) for _ in range(length))
-    timestamp_part = str(int(time.time() * 1000))
+    timestamp_part = str(int(datetime.datetime.now().time().microsecond))
     return random_part + timestamp_part
 
 

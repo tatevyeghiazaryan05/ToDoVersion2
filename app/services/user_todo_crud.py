@@ -24,9 +24,9 @@ class ToDoCRUD:
 
         try:
             self.db.cursor.execute(
-                """INSERT INTO todo (user_id, category, title, description, due_date, status, archived)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                (user_id, category, title, description, due_date, False, False)
+                """INSERT INTO todo (user_id, category, title, description, due_date)
+                 VALUES (%s, %s, %s, %s, %s)""",
+                (user_id, category, title, description, due_date)
             )
             self.db.conn.commit()
         except Exception:
@@ -101,3 +101,20 @@ class ToDoCRUD:
                                 detail="Database fetch error")
 
         return todos
+
+    def get_todo(self, todo_id: int):
+        try:
+            self.db.cursor.execute("SELECT * FROM todo where id=%s",
+                                   (todo_id,))
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database query error")
+
+        try:
+            todo = self.db.cursor.fetchone()
+
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Database fetch error")
+
+        return todo

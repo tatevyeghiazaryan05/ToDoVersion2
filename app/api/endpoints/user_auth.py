@@ -22,6 +22,3 @@ def verify(data: VerificationCodeSchema):
                        status_code=status.HTTP_201_CREATED)
 def login(data: UserLoginSchema):
     return user_auth_service.login(data)
-
-
-
