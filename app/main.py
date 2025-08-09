@@ -6,7 +6,7 @@ from api.endpoints import user_auth, user_todo_crud, todo_archive, todo_filters
 from services.reminder_service import start_reminder_loop
 
 
-app = FastAPI()
+app = FastAPI(root_path="/ToDoVersion2")
 
 origins = ["*"]
 
