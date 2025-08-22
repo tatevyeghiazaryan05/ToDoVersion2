@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api/todo';
+const API_BASE_URL = '/ToDo/api/todo';
 
 // Create axios instance with default config
 const api = axios.create({

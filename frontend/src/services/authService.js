@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api/user/auth';
+const API_BASE_URL = '/ToDo/api/user/auth';
 
 // Create axios instance with default config
 const api = axios.create({
