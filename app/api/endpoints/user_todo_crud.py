@@ -10,7 +10,7 @@ todo_crud_router = APIRouter(tags=["Todo CRUD"])
 todo_crud_service = ToDoCRUD()
 
 
-@todo_crud_router.post("/api/todo/add/todo",
+@todo_crud_router.post("/ToDo/api/todo/add/todo",
                        status_code=status.HTTP_201_CREATED)
 def create_todo(data: ToDoCreateSchema,
                 token=Depends(get_current_user)):
@@ -26,19 +26,19 @@ def create_todo(data: ToDoCreateSchema,
     return todo_crud_service.todo_create(data, user_id)
 
 
-@todo_crud_router.put("/api/todo/change/{todo_id}")
+@todo_crud_router.put("/ToDo/api/todo/change/{todo_id}")
 def change_todo(todo_id: int,
                 data: TodoUpdateSchema,
                 token=Depends(get_current_user)):
     return todo_crud_service.update_todo(data, todo_id)
 
 
-@todo_crud_router.delete("/api/todo/delete/todo/{todo_id}")
+@todo_crud_router.delete("/ToDo/api/todo/delete/todo/{todo_id}")
 def delete_todo(todo_id: int):
     return todo_crud_service.delete_todo(todo_id)
 
 
-@todo_crud_router.get("/api/todo/get/all/todo")
+@todo_crud_router.get("/ToDo/api/todo/get/all/todo")
 def get_todo(token=Depends(get_current_user)):
     try:
         user_id = token.get("id")
@@ -51,6 +51,6 @@ def get_todo(token=Depends(get_current_user)):
     return todo_crud_service.get_all_todos(user_id)
 
 
-@todo_crud_router.get("/api/todo/get/todo/{todo_id}")
+@todo_crud_router.get("/ToDo/api/todo/get/todo/{todo_id}")
 def get_todo(todo_id: int, token=Depends(get_current_user)):
     return todo_crud_service.get_todo(todo_id)
