@@ -19,14 +19,45 @@ def generate_verification_code(length=8):
     return random_part + timestamp_part
 
 
-def send_verification_email(user_email, code):
+def send_verification_email(user_email, code, is_reminder=False):
     """Send verification code to user email"""
+    
+    if is_reminder:
+        subject = "🔔 Verification Reminder - Complete Your Account Setup"
+        content = f"""
+Hello!
+
+This is a reminder that your account verification is still pending.
+
+Your verification code is: {code}
+
+Please verify your account within 3 days to avoid account restrictions.
+
+If you have any questions, please contact support.
+
+Best regards,
+Todo App Team
+        """
+    else:
+        subject = "✅ Verify Your Todo App Account"
+        content = f"""
+Welcome to Todo App!
+
+Thank you for signing up. To complete your account setup, please use this verification code:
+
+{code}
+
+This code will expire in 15 minutes.
+
+Best regards,
+Todo App Team
+        """
 
     msg = EmailMessage()
-    msg["Subject"] = "Click here "
+    msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
     msg["To"] = user_email
-    msg.set_content(f"{code}")
+    msg.set_content(content.strip())
 
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
@@ -34,6 +65,6 @@ def send_verification_email(user_email, code):
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
             server.send_message(msg)
         return True
-    except Exception:
-        print("Error sending email:")
+    except Exception as e:
+        print(f"Error sending email: {e}")
         return False

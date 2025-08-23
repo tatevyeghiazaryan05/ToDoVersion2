@@ -124,6 +124,33 @@ class UserAuth:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error deleting verification code")
 
+    def check_verification_deadline(self, user_created_at):
+        """Check if user is within 3-day verification window"""
+        deadline = user_created_at + timedelta(days=3)
+        return datetime.now() <= deadline
+
+    def send_verification_reminder(self, email):
+        """Send a reminder email to verify account"""
+        try:
+            # Generate new verification code
+            code = generate_verification_code()
+            
+            # Delete old verification codes for this email
+            self.db.cursor.execute("DELETE FROM verificationcode WHERE email = %s", (email,))
+            self.db.conn.commit()
+            
+            # Insert new verification code
+            self.db.cursor.execute("""INSERT INTO verificationcode (code, email) VALUES (%s, %s)""",
+                                   (code, email))
+            self.db.conn.commit()
+            
+            # Send reminder email
+            email_sent = send_verification_email(email, code, is_reminder=True)
+            return email_sent
+        except Exception as e:
+            print(f"Error sending verification reminder: {e}")
+            return False
+
     def login(self, login_data: UserLoginSchema):
         email = login_data.email
         password = login_data.password
@@ -150,21 +177,31 @@ class UserAuth:
             user = dict(user)
             user_password_db = user.get("password")
             user_verified = user.get("verified")
+            user_created_at = user.get("created_at")
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error processing user data")
 
-        if not user_verified:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account is not verified. Please verify your email first."
-            )
-
+        # Check password first
         if not pwd_context.verify(password, user_password_db):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Password is not correct!"
             )
+
+        # If user is not verified, check verification deadline
+        if not user_verified:
+            if not self.check_verification_deadline(user_created_at):
+                # User is past 3-day deadline, send reminder and block login
+                self.send_verification_reminder(email)
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Account verification deadline expired. A new verification email has been sent. Please verify within 3 days."
+                )
+            else:
+                # User is within 3-day window, allow login but send reminder
+                self.send_verification_reminder(email)
+                # Continue with login but add warning message
 
         try:
             user_id_db = user.get("id")
@@ -175,4 +212,15 @@ class UserAuth:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Token creation error")
 
-        return {"access_token": token}
+        # Return different response based on verification status
+        if not user_verified:
+            return {
+                "access_token": token,
+                "warning": "Account not verified. Please check your email for verification link. You have 3 days to verify your account.",
+                "verified": False
+            }
+        else:
+            return {
+                "access_token": token,
+                "verified": True
+            }

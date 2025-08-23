@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, LogIn, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationWarning, setVerificationWarning] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -19,11 +20,23 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
+    setVerificationWarning(''); // Clear previous warnings
+    
     try {
       const result = await login(data.email, data.password);
       if (result.success) {
-        toast.success('Login successful!');
-        navigate('/');
+        // Check if user is verified
+        if (result.verified === false) {
+          // User is logged in but not verified
+          setVerificationWarning(result.warning || 'Please verify your email address to access all features.');
+          toast.success('Login successful! Please check your email for verification.');
+          // Still navigate to dashboard but show warning
+          navigate('/');
+        } else {
+          // User is fully verified
+          toast.success('Login successful!');
+          navigate('/');
+        }
       } else {
         toast.error(result.error || 'Login failed');
       }
@@ -47,6 +60,17 @@ const Login = () => {
         </div>
 
         <div className="card">
+          {/* Verification Warning */}
+          {verificationWarning && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                <p className="text-sm text-yellow-800 font-medium">Verification Required</p>
+              </div>
+              <p className="mt-2 text-sm text-yellow-700">{verificationWarning}</p>
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-2">

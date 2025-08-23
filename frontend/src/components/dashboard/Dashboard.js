@@ -4,7 +4,7 @@ import { todoService } from '../../services/todoService';
 import Header from './Header';
 import TodoList from './TodoList';
 import AddTodoModal from './AddTodoModal';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, AlertTriangle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [showVerificationWarning, setShowVerificationWarning] = useState(true);
 
   useEffect(() => {
     fetchTodos();
@@ -119,6 +120,33 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-secondary-50">
       <Header user={user} onLogout={logout} />
+      
+      {/* Verification Warning Banner */}
+      {user && !user.verified && showVerificationWarning && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">
+                    Email Verification Required
+                  </p>
+                  <p className="text-sm text-yellow-700">
+                    Please verify your email address within 3 days to avoid account restrictions. Check your inbox for the verification link.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVerificationWarning(false)}
+                className="text-yellow-600 hover:text-yellow-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats and Actions */}
