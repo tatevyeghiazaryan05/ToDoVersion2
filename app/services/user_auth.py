@@ -7,6 +7,7 @@ from schemas.user_auth_schemas import UserSignUpSchema, UserLoginSchema, Verific
 from core.security import pwd_context
 from services.email_service import send_verification_email, generate_verification_code
 from core.security import create_access_token
+from app.services.telegram_message import send_telegram_message
 
 
 class UserAuth:
@@ -52,6 +53,8 @@ class UserAuth:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Database Query error :{e} ")
+
+        send_telegram_message("🎉 New user signed up!👤")
 
         code = generate_verification_code()
 
