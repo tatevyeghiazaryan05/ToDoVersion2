@@ -19,45 +19,64 @@ def generate_verification_code(length=8):
     return random_part + timestamp_part
 
 
-def send_verification_email(user_email, code, is_reminder=False):
-    """Send verification code to user email"""
-    
+def send_verification_email(user_email, is_reminder=False):
+    """Send verification code to user email with a clickable button"""
+    url = f"http://127.0.0.1:8000/ToDo/api/user/auth/verify/{user_email}"
+
     if is_reminder:
         subject = "🔔 Verification Reminder - Complete Your Account Setup"
-        content = f"""
-Hello!
-
-This is a reminder that your account verification is still pending.
-
-Your verification code is: {code}
-
-Please verify your account within 3 days to avoid account restrictions.
-
-If you have any questions, please contact support.
-
-Best regards,
-Todo App Team
+        html_content = f"""
+        <html>
+          <body>
+            <p>Hello!</p>
+            <p>This is a reminder that your account verification is still pending.</p>
+            <p>
+              <a href="{url}" style="
+                  display:inline-block;
+                  padding:10px 20px;
+                  font-size:16px;
+                  color:#ffffff;
+                  background-color:#28a745;
+                  text-decoration:none;
+                  border-radius:5px;">
+                ✅ Verify My Account
+              </a>
+            </p>
+            <p>Please verify your account within 3 days to avoid account restrictions.</p>
+            <p>If you have any questions, please contact support.</p>
+            <p>Best regards,<br>Todo App Team</p>
+          </body>
+        </html>
         """
     else:
         subject = "✅ Verify Your Todo App Account"
-        content = f"""
-Welcome to Todo App!
-
-Thank you for signing up. To complete your account setup, please use this verification code:
-
-{code}
-
-This code will expire in 15 minutes.
-
-Best regards,
-Todo App Team
+        html_content = f"""
+        <html>
+          <body>
+            <p>Welcome to Todo App!</p>
+            <p>Thank you for signing up. To complete your account setup, please click the button below:</p>
+            <p>
+              <a href="{url}" style="
+                  display:inline-block;
+                  padding:10px 20px;
+                  font-size:16px;
+                  color:#ffffff;
+                  background-color:#007bff;
+                  text-decoration:none;
+                  border-radius:5px;">
+                ✅ Verify My Account
+              </a>
+            </p>
+            <p>Best regards,<br>Todo App Team</p>
+          </body>
+        </html>
         """
 
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
     msg["To"] = user_email
-    msg.set_content(content.strip())
+    msg.add_alternative(html_content, subtype="html")  # Send HTML email
 
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:

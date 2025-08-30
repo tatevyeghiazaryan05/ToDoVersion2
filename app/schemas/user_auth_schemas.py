@@ -14,4 +14,3 @@ class UserLoginSchema(BaseModel):
 
 class VerificationCodeSchema(BaseModel):
     email: str
-    code: str

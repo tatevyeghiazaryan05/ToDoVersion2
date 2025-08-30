@@ -13,6 +13,7 @@ from services.telegram_message import send_telegram_message
 class UserAuth:
     def __init__(self):
         self.db = DbConnection()
+    URL = "https://127.0.0.1:8000/ToDo/api/user/auth/verify"
 
     def signup(self, data: UserSignUpSchema):
         name = data.name
@@ -67,7 +68,7 @@ class UserAuth:
                                 detail=f"Error inserting verification code:{e}")
 
         try:
-            email_sent = send_verification_email(email, code)
+            email_sent = send_verification_email(email)
             if not email_sent:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                     detail="Failed to send verification email.")
@@ -75,11 +76,11 @@ class UserAuth:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error sending verification email")
 
-    def verify(self, verification_data: VerificationCodeSchema):
+    def verify(self,email:str):
         try:
             self.db.cursor.execute("""SELECT * FROM verificationcode 
-                                WHERE email = %s AND code = %s""",
-                                   (verification_data.email, verification_data.code))
+                                WHERE email = %s """,
+                                   (email,))
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Database query error")
@@ -107,21 +108,17 @@ class UserAuth:
             except Exception:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                     detail="Error deleting expired code")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Verification code has expired after 15 minutes."
-            )
 
         try:
             self.db.cursor.execute("""UPDATE users SET verified=%s WHERE email=%s""",
-                                   ("true", verification_data.email))
+                                   ("true", email))
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Error updating user as verified")
 
         try:
-            self.db.cursor.execute("DELETE FROM verificationcode WHERE code= %s", (verification_data.code,))
+            self.db.cursor.execute("DELETE FROM verificationcode WHERE email= %s", (email,))
             self.db.conn.commit()
         except Exception:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

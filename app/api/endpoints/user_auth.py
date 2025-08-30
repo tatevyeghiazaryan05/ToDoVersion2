@@ -13,9 +13,9 @@ def signup(data: UserSignUpSchema):
     return user_auth_service.signup(data)
 
 
-@user_auth_router.post("/ToDo/api/user/auth/verify")
-def verify(data: VerificationCodeSchema):
-    return user_auth_service.verify(data)
+@user_auth_router.get("/ToDo/api/user/auth/verify/{email}")
+def verify(email:str):
+    return user_auth_service.verify(email)
 
 
 @user_auth_router.post("/ToDo/api/user/auth/login",
